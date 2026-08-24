@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misi Bobo: Rahasia Mesin Pembentuk Kue</title>
+  <style>
+    :root {
+      --bg-color: #FFF8EA;
+      --card-bg: #FFFFFF;
+      --primary: #5C3D2E;
+      --accent: #FFD93D;
+      --mint: #BCEAD5;
+      --coral: #FF6B6B;
+      --text: #2C3E50;
+      --success: #2E7D32;
+      --error: #C62828;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    #game-container { width: 100%; max-width: 850px; background: var(--card-bg); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid var(--primary); overflow: hidden; position: relative; }
+    
+    /* HUD Status Bar */
+    #hud { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 12px 20px; font-weight: bold; }
+    .hud-item { display: flex; align-items: center; gap: 8px; }
+
+    /* Scene Container */
+    .scene { display: none; padding: 25px; text-align: center; }
+    .scene.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+
+    /* Controls & Buttons */
+    .btn { background: var(--accent); border: 2px solid var(--primary); color: var(--primary); padding: 12px 24px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; margin: 8px; }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-primary { background: var(--mint); }
+    
+    /* Tombol Navigasi Selanjutnya */
+    .btn-next-action { 
+      background: #2E7D32 !important; 
+      color: white !important; 
+      display: none; 
+      margin: 20px auto 0 auto; 
+      width: 100%; 
+      max-width: 350px; 
+      padding: 16px 24px; 
+      font-size: 18px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+      border: none;
+    }
+    .btn-next-action:hover {
+      background: #1B5E20 !important;
+    }
+    
+    /* Shapes UI */
+    .shape-card { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 100px; height: 100px; border: 3px solid var(--primary); border-radius: 15px; margin: 10px; cursor: pointer; background: #FFF; transition: 0.2s; }
+    .shape-card.selected { background: var(--mint); transform: scale(1.08); border-width: 4px; }
+    .shape-icon { font-size: 36px; margin-bottom: 5px; }
+
+    /* Machine Diagram Display */
+    .diagram-box { background: #F9F9F9; border: 2px dashed var(--primary); padding: 15px; border-radius: 12px; margin: 15px 0; font-family: monospace; font-size: 14px; text-align: left; white-space: pre-wrap; line-height: 1.4; }
+
+    /* Quiz Option Buttons */
+    .quiz-option { display: block; width: 100%; text-align: left; padding: 14px 18px; margin: 10px 0; background: #F8F9FA; border: 2px solid #DEE2E6; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; transition: 0.2s; }
+    .quiz-option:hover:not(:disabled) { background: #E9ECEF; border-color: var(--primary); }
+
+    /* Feedback Box */
+    .feedback-box { margin-top: 15px; padding: 12px; border-radius: 8px; font-weight: bold; min-height: 20px; }
+
+    /* Input Style */
+    .input-field { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #CCC; margin-top: 5px; font-size: 14px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- HUD / Game Bar -->
+  <div id="hud">
+    <div class="hud-item">🏆 Skor: <span id="score-display">0</span></div>
+    <div class="hud-item">❤️ Nyawa: <span id="lives-display">3</span></div>
+    <div class="hud-item">📍 Scene: <span id="scene-num">1</span>/15</div>
+  </div>
+
+  <!-- SCENE 1: COVER -->
+  <div id="scene-1" class="scene active">
+    <h1>🍰 MISI BOBO: RAHASIA MESIN PEMBENTUK KUE</h1>
+    <h3>Bantu Bobo menemukan jalan yang tepat untuk mendapatkan kue yang diinginkan!</h3>
+    <div style="font-size: 80px; margin: 20px 0;">🧑‍🍳 ⚙️ 🍪</div>
+    <p>Mata Pelajaran Informatika - Kelas VIII SMP (Fungsi & Berpikir Komputasional)</p>
+    <button class="btn btn-primary" onclick="goToScene(2)">🚀 MULAI MISI</button>
+  </div>
+
+  <!-- SCENE 2: CERITA BOBO -->
+  <div id="scene-2" class="scene">
+    <h2>📖 Cerita Bobo</h2>
+    <p style="font-size: 18px; line-height: 1.6; text-align: justify;">
+      Bobo adalah seorang pembantu chef di Pabrik Kue Ajaib. Hari ini, pelanggan memesan kue dengan bentuk spesifik! Untuk membuatnya, adonan harus dimasukkan ke dalam mesin pembentuk adonan berpintu rahasia. Setiap pintu dan jalur memiliki aturan perubahan bentuk masing-masing. Bisakah kamu membantu Bobo memilih adonan awal dan pintu yang tepat?
+    </p>
+    <button class="btn btn-primary" onclick="goToScene(3)">LANJUTKAN ➡️</button>
+  </div>
+
+  <!-- SCENE 3: TUTORIAL -->
+  <div id="scene-3" class="scene">
+    <h2>💡 Konsep Dasar Mesin</h2>
+    <p>Cara kerja mesin di Pabrik Kue Bobo sangat sederhana:</p>
+    <div style="font-size: 20px; font-weight: bold; background: #EBF4F6; padding: 15px; border-radius: 10px; margin: 15px 0;">
+      INPUT (Adonan Awal) ➔ ATURAN MESIN (Proses) ➔ OUTPUT (Bentuk Akhir)
+    </div>
+    <p><i>Catatan: Jika adonan masuk tidak sesuai syarat mesin, bentuknya TIDAK BERUBAH!</i></p>
+    <button class="btn btn-primary" onclick="goToScene(4)">COBA SIMULASI MESIN ➡️</button>
+  </div>
+
+  <!-- SCENE 4: KENALI MESIN -->
+  <div id="scene-4" class="scene">
+    <h2>⚙️ Kenali Aturan Mesin</h2>
+    <p>Sebuah mesin memiliki aturan: <b>🟦 ➔ 🔺</b> (Persegi diubah menjadi Segitiga).</p>
+    <p><b>Pertanyaan:</b> Jika adonan 🟦 (Persegi) dimasukkan, bentuk apa yang keluar?</p>
+    
+    <button class="quiz-option" onclick="checkAnswer(4, 5, false, 'Salah! Mesin mengubah Persegi menjadi Segitiga.')">🔵 Lingkaran</button>
+    <button class="quiz-option" onclick="checkAnswer(4, 5, true, 'Benar! Mesin membaca input Persegi dan mengubahnya jadi Segitiga.')">🔺 Segitiga</button>
+    <button class="quiz-option" onclick="checkAnswer(4, 5, false, 'Salah! Mesin mengubah bentuk jika syarat terpenuhi.')">🟦 Persegi</button>
+    
+    <div id="feedback-4" class="feedback-box"></div>
+    <button id="btn-next-4" class="btn btn-next-action" onclick="goToScene(5)">PERTANYAAN SELANJUTNYA ➡️</button>
+  </div>
+
+  <!-- SCENE 5: LEVEL 1 -->
+  <div id="scene-5" class="scene">
+    <h2>🎯 Level 1: Input & Output</h2>
+    <p>Input Adonan: 🔵 (Lingkaran)</p>
+    <p>Aturan Mesin: <b>🔵 ➔ 🟦</b></p>
+    <p>Bentuk apakah yang dihasilkan sebagai Output?</p>
+    
+    <button class="quiz-option" onclick="checkAnswer(5, 6, true, 'Hebat! Input 🔵 diproses menjadi Output 🟦.')">🟦 Persegi</button>
+    <button class="quiz-option" onclick="checkAnswer(5, 6, false, 'Belum Tepat! Perhatikan aturan mesin.')">🔺 Segitiga</button>
+    
+    <div id="feedback-5" class="feedback-box"></div>
+    <button id="btn-next-5" class="btn btn-next-action" onclick="goToScene(6)">PERTANYAAN SELANJUTNYA ➡️</button>
+  </div>
+
+  <!-- SCENE 6: LEVEL 2 -->
+  <div id="scene-6" class="scene">
+    <h2>⚙️ Level 2: Syarat Mesin</h2>
+    <p>Input Adonan: 🔺 (Segitiga)</p>
+    <p>Aturan Mesin: <b>🟦 ➔ 🔺</b> (Hanya mengubah Persegi menjadi Segitiga)</p>
+    <p>Apakah adonan Segitiga akan berubah bentuk?</p>
+    
+    <button class="quiz-option" onclick="checkAnswer(6, 7, false, 'Kurang tepat. Syarat mesin adalah input Persegi, tetapi yang masuk Segitiga.')">Ya, Berubah</button>
+    <button class="quiz-option" onclick="checkAnswer(6, 7, true, 'Tepat Sekali! Karena input tidak cocok dengan syarat mesin, bentuknya TIDAK BERUBAH (Tetap Segitiga).')">Tidak Berubah</button>
+    
+    <div id="feedback-6" class="feedback-box"></div>
+    <button id="btn-next-6" class="btn btn-next-action" onclick="goToScene(7)">MASUK PENGUJI APLIKASI ➡️</button>
+  </div>
+
+  <!-- SCENE 7: SELEKSI ADONAN & PINTU -->
+  <div id="scene-7" class="scene">
+    <h2>🧪 Level 3 & 4: Uji Coba Kombinasi</h2>
+    <p>Pilih Bentuk Adonan Awal:</p>
+    <div>
+      <div class="shape-card" id="card-square" onclick="selectShape('🟦')"><span class="shape-icon">🟦</span>Persegi</div>
+      <div class="shape-card" id="card-triangle" onclick="selectShape('🔺')"><span class="shape-icon">🔺</span>Segitiga</div>
+      <div class="shape-card" id="card-circle" onclick="selectShape('🔵')"><span class="shape-icon">🔵</span>Lingkaran</div>
+    </div>
+    <p>Pilih Pintu Masuk:</p>
+    <div>
+      <button class="btn" onclick="selectDoor(1)">🚪 PINTU 1</button>
+      <button class="btn" onclick="selectDoor(2)">🚪 PINTU 2</button>
+      <button class="btn" onclick="selectDoor(3)">🚪 PINTU 3</button>
+    </div>
+    <p>Pilihanmu: Adonan <span id="user-shape" style="font-weight:bold;">-</span> | Pintu <span id="user-door" style="font-weight:bold;">-</span></p>
+    <button class="btn btn-primary" onclick="runSimulation()">TELUSURI JALUR MESIN ➡️</button>
+  </div>
+
+  <!-- SCENE 9: SIMULASI JALUR -->
+  <div id="scene-9" class="scene">
+    <h2>🗺️ Penelusuran Jalur Mesin</h2>
+    <div class="diagram-box" id="simulation-trace">
+      Klik 'Telusuri' dari scene sebelumnya untuk melihat simulasi penelusuran jalur adonan.
+    </div>
+    <button class="btn" onclick="goToScene(7)">🔄 Coba Kombinasi Lain</button>
+    <button class="btn btn-primary" onclick="goToScene(10)">KE TABEL DETEKTIF ➡️</button>
+  </div>
+
+  <!-- SCENE 10: TABEL DETEKTIF FUNGSI -->
+  <div id="scene-10" class="scene">
+    <h2>🔎 Level 6: Detektif Fungsi</h2>
+    <p>Seorang detektif mengumpulkan data untuk menemukan pola!</p>
+    <table border="1" style="width:100%; border-collapse:collapse; margin: 15px 0;">
+      <tr style="background:#EEE;"><th>Pintu</th><th>Input Awal</th><th>Aturan Utama</th><th>Output K</th></tr>
+      <tr><td>Pintu 1</td><td>🟦 Persegi</td><td>🟦➔🔺 kemudian 🔺➔🟦</td><td>🟦 Persegi (SOLUSI!)</td></tr>
+      <tr><td>Pintu 2</td><td>🔵 Lingkaran</td><td>🔵➔🟦 ➔ 🟦➔🔺 ➔ 🔺➔🟦</td><td>🟦 Persegi (SOLUSI!)</td></tr>
+      <tr><td>Pintu 3</td><td>🔺 Segitiga</td><td>🔺➔🔵 ➔ 🔵➔🔺</td><td>🔺 Segitiga</td></tr>
+    </table>
+    <button class="btn btn-primary" onclick="goToScene(11)">MENUJU MISI UTAMA 🚨</button>
+  </div>
+
+  <!-- SCENE 11: MISI UTAMA BOBO -->
+  <div id="scene-11" class="scene">
+    <h2 style="color:var(--coral);">🚨 MISI UTAMA BOBO</h2>
+    <p><b>Target Bobo:</b> Menghasilkan kue berbentuk <b>PERSEGI (🟦)</b> di <b>Pintu K</b>.</p>
+    <p>Tentukan kombinasi input awal dan pintu masuk yang benar!</p>
+    
+    <div>
+      <label><b>Bentuk Adonan Awal:</b></label>
+      <select id="final-shape" style="padding:8px; font-size:16px;">
+        <option value="🟦">🟦 Persegi</option>
+        <option value="🔺">🔺 Segitiga</option>
+        <option value="🔵">🔵 Lingkaran</option>
+      </select>
+    </div>
+    <br>
+    <div>
+      <label><b>Pintu Masuk:</b></label>
+      <select id="final-door" style="padding:8px; font-size:16px;">
+        <option value="1">🚪 Pintu 1</option>
+        <option value="2">🚪 Pintu 2</option>
+        <option value="3">🚪 Pintu 3</option>
+      </select>
+    </div>
+    <br>
+    <button id="btn-submit-mission" class="btn btn-primary" onclick="submitFinalMission()">JALANKAN MISI 🚀</button>
+    <div id="mission-feedback" class="feedback-box"></div>
+    <button id="btn-next-11" class="btn btn-next-action" onclick="goToScene(12)">PELAJARI KONSEP FUNGSI ➡️</button>
+  </div>
+
+  <!-- SCENE 12: RELASI FUNGSI MATEMATIKA -->
+  <div id="scene-12" class="scene">
+    <h2>📐 Apa itu Fungsi?</h2>
+    <p>Selamat! Kamu telah menerapkan konsep <b>Fungsi Matematika</b>!</p>
+    <div style="background:#EBF4F6; padding:15px; border-radius:10px; text-align:left;">
+      <ul>
+        <li><b>Domain (Input):</b> Bentuk adonan awal yang dimasukkan.</li>
+        <li><b>Aturan Fungsi (Proses):</b> Mesin-mesin pembentuk adonan.</li>
+        <li><b>Kodomain/Range (Output):</b> Bentuk kue yang dihasilkan di Pintu K.</li>
+      </ul>
+      <p><i>Fungsi adalah relasi khusus di mana setiap nilai masukan (input) tepat menghasilkan satu nilai keluaran (output) yang unik.</i></p>
+    </div>
+    <button class="btn btn-primary" onclick="goToScene(13)">KONEKSI BERPIKIR KOMPUTASIONAL ➡️</button>
+  </div>
+
+  <!-- SCENE 13: BERPIKIR KOMPUTASIONAL -->
+  <div id="scene-13" class="scene">
+    <h2>🧠 Berpikir Komputasional (BK)</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; text-align:left;">
+      <div style="background:#FFF3E0; padding:10px; border-radius:8px;"><b>🧩 Dekomposisi:</b> Memecah jalur mesin menjadi unit-unit mesin tunggal.</div>
+      <div style="background:#E8F5E9; padding:10px; border-radius:8px;"><b>🔍 Pengenalan Pola:</b> Mencatat perubahan adonan dari input ke output.</div>
+      <div style="background:#E1F5FE; padding:10px; border-radius:8px;"><b>🎯 Abstraksi:</b> Fokus pada aturan mesin, mengabaikan dekorasi pabrik.</div>
+      <div style="background:#F3E5F5; padding:10px; border-radius:8px;"><b>📋 Algoritma:</b> Mengikuti urutan jalur mesin langkah demi langkah.</div>
+    </div>
+    <br>
+    <button class="btn btn-primary" onclick="goToScene(14)">IKUTI EVALUASI / QUIZ ➡️</button>
+  </div>
+
+  <!-- SCENE 14: QUIZ EVALUASI -->
+  <div id="scene-14" class="scene">
+    <h2>📝 Evaluasi Pembelajaran</h2>
+    <p><b>Soal:</b> Jika adonan 🔺 (Segitiga) dimasukkan ke Pintu 1, bentuk apakah yang keluar di Pintu K?</p>
+    
+    <button class="quiz-option" onclick="answerQuiz(14, false, 'Salah! Mari kita telusuri lagi urutan mesinnya.')">A. 🔵 Lingkaran</button>
+    <button class="quiz-option" onclick="answerQuiz(14, true, 'Jawaban Benar! (🔺 tidak diubah Mesin 1a, tidak diubah Mesin Tengah, diubah Mesin K-1 jadi 🟦, lalu pada mesin K-2 tidak diubah)')">B. 🟦 Persegi</button>
+    <button class="quiz-option" onclick="answerQuiz(14, false, 'Salah! Mesin K-2 mengubah 🔵 menjadi 🔺.')">C. 🔺 Segitiga</button>
+    
+    <div id="quiz-feedback" class="feedback-box"></div>
+    <button id="btn-next-14" class="btn btn-next-action" onclick="finishQuiz()">LIHAT SKOR AKHIR 🏆</button>
+  </div>
+
+  <!-- SCENE 15: HASIL & REFLEKSI (SUDAH DIPERBAIKI) -->
+  <div id="scene-15" class="scene">
+    <h2>🏆 MISI SELESAI!</h2>
+    <h3>SKOR AKHIR: <span id="final-score">0</span> / 100</h3>
+    <div id="badge-title" style="font-size:22px; font-weight:bold; color:var(--primary); margin:10px 0;"></div>
+    
+    <hr>
+    <h3>💭 Identitas & Refleksi Pembelajaran</h3>
+    <div style="text-align:left;">
+      <label><b>Nama Siswa:</b></label><br>
+      <input type="text" id="inputNama" class="input-field" placeholder="Masukkan nama lengkap Anda"><br><br>
+
+      <label><b>Kelas:</b></label><br>
+      <input type="text" id="inputKelas" class="input-field" placeholder="Contoh: 8A"><br><br>
+
+      <label><b>1. Dari proses belajar hari ini, hal yang saya pahami adalah:</b></label><br>
+      <textarea id="inputPahami" rows="2" class="input-field" placeholder="Jawaban..."></textarea><br><br>
+      
+      <label><b>2. Hal yang belum saya pahami adalah:</b></label><br>
+      <textarea id="inputBelumPahami" rows="2" class="input-field" placeholder="Jawaban..."></textarea><br><br>
+    </div>
+    <br>
+    <button id="btn-save-reflection" class="btn btn-primary" onclick="kirimRefleksi()">SIMPAN REFLEKSI & SELESAI</button>
+  </div>
+
+</div>
+
+<script>
+  let currentScene = 1;
+  let score = 0;
+  let lives = 3;
+  let selectedShape = '';
+  let selectedDoor = 0;
+
+  const completedScenes = {};
+
+  function goToScene(num) {
+    document.getElementById(`scene-${currentScene}`).classList.remove('active');
+    currentScene = num;
+    document.getElementById(`scene-${currentScene}`).classList.add('active');
+    document.getElementById('scene-num').innerText = currentScene;
+    window.scrollTo(0, 0);
+  }
+
+  function addScore(pts) {
+    score += pts;
+    document.getElementById('score-display').innerText = score;
+  }
+
+  function checkAnswer(sceneNum, nextSceneNum, isCorrect, msg) {
+    const fb = document.getElementById(`feedback-${sceneNum}`);
+    const nextBtn = document.getElementById(`btn-next-${sceneNum}`);
+
+    if (isCorrect) {
+      if (!completedScenes[sceneNum]) {
+        completedScenes[sceneNum] = true;
+        addScore(10);
+      }
+
+      fb.style.color = "var(--success)";
+      fb.style.backgroundColor = "#E8F5E9";
+      fb.innerHTML = "🎉 " + msg;
+
+      const options = document.querySelectorAll(`#scene-${sceneNum} .quiz-option`);
+      options.forEach(btn => btn.disabled = true);
+
+      if (nextBtn) {
+        nextBtn.style.display = "block";
+      }
+    } else {
+      fb.style.color = "var(--error)";
+      fb.style.backgroundColor = "#FFEBEE";
+      fb.innerHTML = "❌ " + msg;
+
+      lives--;
+      if (lives < 0) lives = 0;
+      document.getElementById('lives-display').innerText = lives;
+
+      if (lives === 0) {
+        alert("❤️ Nyawa habis! Mari ulang dari awal.");
+        location.reload();
+      }
+    }
+  }
+
+  function selectShape(shape) {
+    selectedShape = shape;
+    document.getElementById('user-shape').innerText = shape;
+    document.querySelectorAll('.shape-card').forEach(c => c.classList.remove('selected'));
+    if(shape === '🟦') document.getElementById('card-square').classList.add('selected');
+    if(shape === '🔺') document.getElementById('card-triangle').classList.add('selected');
+    if(shape === '🔵') document.getElementById('card-circle').classList.add('selected');
+  }
+
+  function selectDoor(door) {
+    selectedDoor = door;
+    document.getElementById('user-door').innerText = door;
+  }
+
+  function runSimulation() {
+    if(!selectedShape || !selectedDoor) {
+      alert("Pilih bentuk adonan dan pintu terlebih dahulu!");
+      return;
+    }
+    
+    let traceLog = `PROSES SIMULASI JALUR:\nInput: ${selectedShape} melalui PINTU ${selectedDoor}\n\n`;
+    let current = selectedShape;
+
+    if(selectedDoor === 1) {
+      traceLog += `1. Melewati Mesin 1a (🟦➔🔺): `;
+      if(current === '🟦') current = '🔺';
+      traceLog += `Bentuk sekarang = ${current}\n`;
+
+      traceLog += `2. Melewati Mesin Tengah (🟦➔🔺): `;
+      if(current === '🟦') current = '🔺';
+      traceLog += `Bentuk sekarang = ${current}\n`;
+    } 
+    else if(selectedDoor === 2) {
+      traceLog += `1. Melewati Mesin 2a (🔵➔🟦): `;
+      if(current === '🔵') current = '🟦';
+      traceLog += `Bentuk sekarang = ${current}\n`;
+
+      traceLog += `2. Melewati Mesin 2b (🔺➔🔵): `;
+      if(current === '🔺') current = '🔵';
+      traceLog += `Bentuk sekarang = ${current}\n`;
+
+      traceLog += `3. Melewati Mesin Tengah (🟦➔🔺): `;
+      if(current === '🟦') current = '🔺';
+      traceLog += `Bentuk sekarang = ${current}\n`;
+    }
+    else if(selectedDoor === 3) {
+      traceLog += `1. Melewati Mesin 3a (🟦➔🔵): `;
+      if(current === '🟦') current = '🔵';
+      traceLog += `Bentuk sekarang = ${current}\n`;
+
+      traceLog += `2. Melewati Mesin 3b (🔺➔🔵): `;
+      if(current === '🔺') current = '🔵';
+      traceLog += `Bentuk sekarang = ${current}\n`;
+    }
+
+    traceLog += `\n--- JALUR KELUAR UTAMA (K) ---\n`;
+    traceLog += `4. Melewati Mesin K-1 (🔺➔🟦): `;
+    if(current === '🔺') current = '🟦';
+    traceLog += `Bentuk sekarang = ${current}\n`;
+
+    traceLog += `5. Melewati Mesin K-2 (🔵➔🔺): `;
+    if(current === '🔵') current = '🔺';
+    traceLog += `Bentuk sekarang = ${current}\n`;
+
+    traceLog += `\nHASIL AKHIR PINTU K = ${current}`;
+
+    document.getElementById('simulation-trace').innerText = traceLog;
+    goToScene(9);
+  }
+
+  function submitFinalMission() {
+    const shape = document.getElementById('final-shape').value;
+    const door = parseInt(document.getElementById('final-door').value);
+    const fb = document.getElementById('mission-feedback');
+    const nextBtn = document.getElementById('btn-next-11');
+    const submitBtn = document.getElementById('btn-submit-mission');
+
+    if((door === 1 && shape === '🟦') || (door === 2 && shape === '🔵')) {
+      if (!completedScenes[11]) {
+        completedScenes[11] = true;
+        addScore(40);
+      }
+      
+      fb.style.color = "var(--success)";
+      fb.style.backgroundColor = "#E8F5E9";
+      fb.innerHTML = "🎉 MISI BERHASIL! Adonan berhasil keluar berbentuk 🟦 Persegi di Pintu K!";
+      
+      submitBtn.disabled = true;
+      nextBtn.style.display = "block";
+    } else {
+      fb.style.color = "var(--error)";
+      fb.style.backgroundColor = "#FFEBEE";
+      fb.innerHTML = "❌ MISI BELUM BERHASIL. Kombinasi ini tidak menghasilkan 🟦 di Pintu K. Coba lagi!";
+    }
+  }
+
+  function answerQuiz(sceneNum, isCorrect, msg) {
+    const fb = document.getElementById('quiz-feedback');
+    const nextBtn = document.getElementById('btn-next-14');
+
+    if(isCorrect) {
+      if (!completedScenes[sceneNum]) {
+        completedScenes[sceneNum] = true;
+        addScore(20);
+      }
+      fb.style.color = "var(--success)";
+      fb.style.backgroundColor = "#E8F5E9";
+      fb.innerHTML = "🎉 " + msg;
+
+      const options = document.querySelectorAll(`#scene-${sceneNum} .quiz-option`);
+      options.forEach(btn => btn.disabled = true);
+
+      nextBtn.style.display = "block";
+    } else {
+      fb.style.color = "var(--error)";
+      fb.style.backgroundColor = "#FFEBEE";
+      fb.innerHTML = "❌ " + msg;
+    }
+  }
+
+  function finishQuiz() {
+    document.getElementById('final-score').innerText = score;
+    let badge = "";
+    if(score >= 90) badge = "🥇 MASTER DETEKTIF FUNGSI";
+    else if(score >= 75) badge = "🥈 DETEKTIF HEBAT";
+    else if(score >= 60) badge = "🥉 DETEKTIF PEMULA";
+    else badge = "🔄 COBA LAGI";
+    document.getElementById('badge-title').innerText = badge;
+    goToScene(15);
+  }
+
+  // FUNGSI PENGIRIMAN DATA YANG SUDAH DIPERBAIKI
+  function kirimRefleksi() {
+    const nama = document.getElementById("inputNama").value.trim();
+    const kelas = document.getElementById("inputKelas").value.trim();
+    const pahami = document.getElementById("inputPahami").value.trim();
+    const belumPahami = document.getElementById("inputBelumPahami").value.trim();
+
+    if (!nama || !kelas) {
+      alert("Mohon isi Nama dan Kelas Anda terlebih dahulu!");
+      return;
+    }
+
+    const btn = document.getElementById("btn-save-reflection");
+    btn.disabled = true;
+    btn.innerText = "⏳ Memproses dan Menyimpan...";
+
+    const gabunganRefleksi = `[Pahami]: ${pahami} | [Belum Pahami]: ${belumPahami}`;
+
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxFr4jJCyLZ0_8ulJljrRYVNP_c7Dx_coE6VA6sEV6PJaiHBeSpiFwqGGFdis-_-8TV6w/exec";
+
+    // Menggunakan format FormData / URLSearchParams agar dapat diproses dengan stabil oleh Apps Script
+    const payload = new URLSearchParams();
+    payload.append("nama", nama);
+    payload.append("kelas", kelas);
+    payload.append("skor", score);
+    payload.append("refleksi", gabunganRefleksi);
+
+    fetch(scriptURL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: payload.toString()
+    })
+    .then(() => {
+      alert("🎉 Terima kasih! Data refleksi dan skor Anda berhasil dikirim ke Guru.");
+      btn.innerText = "✅ DATA TERKIRIM";
+    })
+    .catch(error => {
+      console.error("Gagal mengirim data:", error);
+      alert("Terjadi kesalahan saat mengirim data. Coba lagi.");
+      btn.disabled = false;
+      btn.innerText = "SIMPAN REFLEKSI & SELESAI";
+    });
+  }
+</script>
+
+</body>
+</html>
